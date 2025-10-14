@@ -1,0 +1,90 @@
+# ===== PYTHON =====
+__pycache__/
+*.py[cod]
+*$py.class
+
+# ===== ENVIRONMENTS =====
+.env
+.env.*
+venv/
+.venv/
+ENV/
+env/
+env.bak/
+*.env
+
+# ===== DJANGO / DRF =====
+db.sqlite3
+*.log
+media/
+staticfiles/
+static/
+tmp/
+*.pot
+*.pyc
+
+# Migrations cache / compiled files
+*/migrations/__pycache__/
+*/migrations/*.pyc
+# (но не сами файлы миграций)
+!*/migrations/__init__.py
+
+# ===== TESTS / COVERAGE =====
+.coverage
+htmlcov/
+.tox/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+
+# ===== IDE / OS FILES =====
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+
+# ===== GIT / BUILD =====
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+
+# ===== DOCKER =====
+*.pid
+*.seed
+docker-compose.override.yml
+*.bak
+
+# ===== MISC =====
+# JetBrains project settings (PyCharm)
+.idea/
+# local configs
+*.local
+*.conf
+*.cfg
+
+# ===== CACHE / BACKUPS =====
+.cache/
+__pypackages__/
+*.bak
+*.swp
+*.tmp
+*.log
+
+# ===== JUPYTER / IPYNB =====
+.ipynb_checkpoints/
+*.ipynb
+
+# ===== LINT / FORMATTING =====
+.mypy_cache/
+.dmypy.json
+ruff_cache/
+.pyre/
+.pytype/
+.black/
+.isort.cfg
