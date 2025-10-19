@@ -11,7 +11,7 @@ from django.shortcuts import get_object_or_404
 from rest_framework.views import APIView
 from rest_framework import serializers
 from django.db import transaction
-from permissions import IsAdminOrReadOnly
+from .permissions import IsAdminOrReadOnly
 from .exceptions import NotFoundKeyed, StockError, KeyedAPIException
 # Create your views here.
 class ProductListCreateView(generics.ListCreateAPIView):
