@@ -43,7 +43,7 @@ jobs:
           pip install -r requirements.txt
       - name: Run migrations
         working-directory: config
-        run: python config/manage.py migrate
+        run: python manage.py migrate
       - name: Run tests
         working-directory: config
         run: pytest -v
