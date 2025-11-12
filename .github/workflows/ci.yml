@@ -45,4 +45,5 @@ jobs:
         working-directory: config
         run: python config/manage.py migrate
       - name: Run tests
+        working-directory: config
         run: pytest -v
