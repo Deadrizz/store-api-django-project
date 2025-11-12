@@ -118,6 +118,7 @@ class OrderItemCreateAPI(APIView):
             raise KeyedAPIException(detail="Cart is empty.", key="cart")
         with transaction.atomic():
             order = Order.objects.create(user=request.user,status=Order.Status.NEW)
+            total = 0
             for item in cart.items.select_related('product').all():
                 product = Product.objects.select_for_update().get(pk=item.product_id)
                 if not product.is_active:
@@ -130,10 +131,13 @@ class OrderItemCreateAPI(APIView):
                         product_id=product.id,
                         available=product.stock,
                     )
-
+                item_sum = item.product.price * item.quantity
+                total +=item_sum
                 OrderItem.objects.create(order=order,product=product,quantity=item.quantity,price=product.price)
                 product.stock -= item.quantity
                 product.save()
+            order.total_price = total
+            order.save()
             cart.items.all().delete()
         return Response(OrderSerializer(order).data,status=status.HTTP_201_CREATED)
 
