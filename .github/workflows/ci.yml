@@ -23,7 +23,7 @@ jobs:
           --health-retries 5
     env:
       DJANGO_SETTINGS_MODULE: config.settings
-      PYTHONPATH: ${{ github.workspace }}/config
+      PYTHONPATH: ${{ github.workspace }}
       POSTGRES_DB: store_db
       POSTGRES_USER: store_user
       POSTGRES_PASSWORD: store_password
