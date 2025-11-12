@@ -15,7 +15,7 @@ jobs:
           POSTGRES_USER: store_user
           POSTGRES_PASSWORD: store_password
         ports:
-          - 5432:5432
+          - "5432:5432"
         options: >-
           --health-cmd "pg_isready -U store_user -d store_db"
           --health-interval 10s
@@ -27,7 +27,7 @@ jobs:
       POSTGRES_PASSWORD: store_password
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      SECRET_KEY: 'django-insecure-d*4oxxp#t*2aw%cs$lurus^a-(+m3r7l8g)6!dbkqg3bir^@3f'
+      SECRET_KEY: test-secret
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -42,5 +42,5 @@ jobs:
           pip install -r requirements.txt
       - name: Run migrations
         run: python config/manage.py migrate
-      -name: Run tests
+      - name: Run tests
         run: pytest -v
