@@ -1,195 +1,268 @@
 # 🏪 Store API (Django + DRF)
 
-A full-featured e-commerce REST API built with **Django REST Framework**, including authentication with **JWT**, product management, shopping cart, and order processing — all with consistent validation and custom error handling.
+![Tests](https://github.com/Deadrizz/store-api-django-project/actions/workflows/ci.yml/badge.svg)
+
+A simple but production-oriented e-commerce backend built with **Django** and **Django REST Framework**.
+
+The project provides:
+
+- product catalog with search, ordering and pagination
+- authenticated shopping cart
+- order checkout with stock validation
+- JWT authentication
+- automated tests, Docker setup and CI (GitHub Actions)
 
 ---
 
 ## 🚀 Features
 
-- **JWT Authentication** (login, refresh, verify)
-- **Admin-only CRUD** for Products and Categories
-- **Shopping Cart** with item merge, stock validation, and quantity updates
-- **Order system** with checkout, pay, and cancel endpoints
-- **Custom validation errors** (consistent `detail`, `key`, `available`)
-- **Pagination, filtering, and search**
-- **Auto-generated API docs** (Swagger / Redoc via drf-spectacular)
+### Products
+- List all products with pagination: `GET /api/products/`
+- Search by name: `GET /api/products/?search=Macbook`
+- Ordering by price: `GET /api/products/?ordering=-price`
+- Only active products are returned
+- Stock is respected when creating orders
+
+### Cart
+- Only available for authenticated users (JWT)
+- Endpoints (example naming, adjust if needed):
+  - `POST /api/cart/items/` – add item to cart
+  - `GET /api/cart/items/` – list cart items
+- Validates:
+  - only existing products can be added
+  - quantity must not exceed stock
+
+### Orders
+- `POST /api/orders/checkout/`
+  - Creates a new order from the current user’s cart
+  - Validates that:
+    - user is authenticated
+    - cart is not empty
+    - there is enough stock for each product
+  - Decreases product stock and clears the user’s cart
+  - Calculates total order price (sum over `quantity * price`)
+
+### Authentication (JWT)
+- Implemented via `djangorestframework-simplejwt`
+- Endpoints (typical configuration):
+  - `POST /api/auth/token/` – obtain access & refresh tokens
+  - `POST /api/auth/token/refresh/` – refresh access token
+- Protected endpoints (cart, orders) require `Authorization: Bearer <access_token>`
+
+### Unified error responses
+- Custom exception is used to return consistent error JSON with a `key` field
+  (for example: `"quantity"`, `"cart"`, `"product"`).
+- This makes it easier to handle errors on frontend side.
+
+### Automated tests
+- Tests implemented with:
+  - `pytest`
+  - `pytest-django`
+  - `model_bakery`
+- Covered scenarios:
+  - products list (empty and with data)
+  - pagination, search, ordering by price
+  - cart access (unauthenticated vs authenticated)
+  - adding items to cart
+  - making orders, empty cart case, total price, clearing cart after checkout
 
 ---
 
-## 🧩 Tech Stack
+## 🧰 Tech stack
 
-- Python 3.12  
-- Django 5.x  
-- Django REST Framework  
-- drf-spectacular (OpenAPI / Swagger docs)  
-- SimpleJWT (token-based authentication)  
-- django-filters  
-
----
-
-## 📁 Project Structure
-
-Store_API/
-│
-├── config/
-│ ├── config/
-│ │ ├── settings.py
-│ │ ├── urls.py
-│ │ └── wsgi.py
-│ └── manage.py
-│
-└── shop/
-├── models.py
-├── serializers.py
-├── views.py
-├── urls.py
-├── exceptions.py
-├── exception_handler.py
-└── permissions.py
+- **Backend:** Django 5, Django REST Framework
+- **Auth:** djangorestframework-simplejwt (JWT)
+- **Database:** PostgreSQL
+- **Schema & docs:** drf-spectacular (+ optional Swagger UI)
+- **Testing:** pytest, pytest-django, model-bakery
+- **Containerization:** Docker, docker-compose
+- **CI:** GitHub Actions (run tests on each push to `main`)
 
 ---
 
-## 🔐 Authentication
+## 📁 Project structure (simplified)
 
-**JWT Endpoints**
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| `POST` | `/api/auth/token/` | Obtain access + refresh tokens |
-| `POST` | `/api/auth/token/refresh/` | Refresh access token |
-| `POST` | `/api/auth/token/verify/` | Verify token validity |
+```text
+store-api-django-project/
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+├── .env                  # not committed, see .env example below
+├── .github/
+│   └── workflows/
+│       └── ci.yml        # GitHub Actions workflow (pytest + Postgres)
+├── conftest.py           # global pytest fixtures (APIClient, product factory, etc.)
+└── config/
+    ├── manage.py
+    ├── pytest.ini
+    ├── config/
+    │   ├── settings.py
+    │   ├── urls.py
+    │   └── ...
+    └── shop/
+        ├── models.py
+        ├── serializers.py
+        ├── views.py
+        ├── urls.py
+        └── tests/
+            ├── test_products.py
+            ├── test_cart.py
+            └── test_orders.py
+⚙️ Environment variables
+The project uses environment variables (e.g. via .env file).
 
----
+Example .env:
 
-## 🛒 Main Endpoints
+env
+Копировать код
+# PostgreSQL
+POSTGRES_DB=store_db
+POSTGRES_USER=store_user
+POSTGRES_PASSWORD=store_password
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
 
-### **Products & Categories (admin only)**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/products/` | List products |
-| `POST` | `/api/products/` | Create product |
-| `GET` | `/api/categories/` | List categories |
-| `POST` | `/api/categories/` | Create category |
+# Django
+SECRET_KEY=dev-secret-key-change-me
+DEBUG=True
+For Docker / docker-compose the POSTGRES_HOST is overridden to db (the name of the database service).
 
----
+💻 Local development (without Docker)
+Requirements:
 
-### **Cart**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/cart/` | Get active cart |
-| `POST` | `/api/cart/items/` | Add product to cart |
-| `PATCH` | `/api/cart/items/<id>/` | Update quantity |
-| `DELETE` | `/api/cart/items/<id>/` | Remove item |
-| `POST` | `/api/cart/clear/` | Clear the entire cart |
-| `POST` | `/api/orders/checkout/` | Create new order from cart |
+Python 3.12
 
----
+PostgreSQL running locally
 
-### **Orders**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/orders/` | List user orders |
-| `GET` | `/api/orders/<id>/` | Get order details |
-| `POST` | `/api/orders/<id>/pay/` | Mark order as paid |
-| `POST` | `/api/orders/<id>/cancel/` | Cancel order (and restock items) |
+virtualenv (recommended)
 
----
-
-## ⚙️ Installation & Setup
----
-
-## 🔐 Authentication
-
-**JWT Endpoints**
-| Method | Endpoint | Description |
-|--------|-----------|--------------|
-| `POST` | `/api/auth/token/` | Obtain access + refresh tokens |
-| `POST` | `/api/auth/token/refresh/` | Refresh access token |
-| `POST` | `/api/auth/token/verify/` | Verify token validity |
-
----
-
-## 🛒 Main Endpoints
-
-### **Products & Categories (admin only)**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/products/` | List products |
-| `POST` | `/api/products/` | Create product |
-| `GET` | `/api/categories/` | List categories |
-| `POST` | `/api/categories/` | Create category |
-
----
-
-### **Cart**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/cart/` | Get active cart |
-| `POST` | `/api/cart/items/` | Add product to cart |
-| `PATCH` | `/api/cart/items/<id>/` | Update quantity |
-| `DELETE` | `/api/cart/items/<id>/` | Remove item |
-| `POST` | `/api/cart/clear/` | Clear the entire cart |
-| `POST` | `/api/orders/checkout/` | Create new order from cart |
-
----
-
-### **Orders**
-| Method | Endpoint | Description |
-|--------|-----------|-------------|
-| `GET` | `/api/orders/` | List user orders |
-| `GET` | `/api/orders/<id>/` | Get order details |
-| `POST` | `/api/orders/<id>/pay/` | Mark order as paid |
-| `POST` | `/api/orders/<id>/cancel/` | Cancel order (and restock items) |
-
----
-
-## ⚙️ Installation & Setup
-
-```bash
-# 1. Clone the repository
+1. Clone the repository
+bash
+Копировать код
 git clone https://github.com/Deadrizz/store-api-django-project.git
-cd store-api-django-project/config
-
-# 2. Create a virtual environment
-python -m venv venv
-source venv/bin/activate   # or venv\Scripts\activate on Windows
-
-# 3. Install dependencies
+cd store-api-django-project
+2. Create and activate virtual environment
+bash
+Копировать код
+python -m venv .venv
+source .venv/bin/activate      # Linux/macOS
+# or:
+# .venv\Scripts\activate       # Windows
+3. Install dependencies
+bash
+Копировать код
+pip install --upgrade pip
 pip install -r requirements.txt
+4. Configure .env
+Create .env in the project root (see example above) and ensure your local PostgreSQL
+is configured with matching POSTGRES_* values.
 
-# 4. Apply migrations
+5. Apply migrations
+bash
+Копировать код
+cd config
 python manage.py migrate
-
-# 5. Create a superuser
+6. Create superuser (optional, for admin panel)
+bash
+Копировать код
 python manage.py createsuperuser
-
-# 6. Run the server
+7. Run development server
+bash
+Копировать код
 python manage.py runserver
-API will be available at:
-👉 http://127.0.0.1:8000/
-Interactive docs (Swagger / Redoc) are automatically generated via drf-spectacular:
+The API will be available at:
+http://127.0.0.1:8000/
 
-Swagger UI: http://127.0.0.1:8000/api/docs/
+🐳 Running with Docker
+The project ships with a docker-compose.yml that starts:
 
-Redoc: http://127.0.0.1:8000/api/redoc/
-Every API error returns a consistent JSON structure:
+web – Django application
 
-{
-  "detail": "Not enough stock.",
-  "key": "quantity",
-  "available": 3,
-  "status_code": 400
-}
-🧠 Example Workflow
+db – PostgreSQL
 
-Obtain JWT token with /api/auth/token/
+1. Build and start services
+From the repository root:
 
-Create a category and a product (admin)
+bash
+Копировать код
+docker compose up --build
+This will:
 
-Add product to cart
+build the Django image,
 
-Checkout → creates order
+start PostgreSQL,
 
-Pay the order → status changes to PAID
+wait until the DB is ready,
+
+run migrations,
+
+start the development server at 0.0.0.0:8000.
+
+2. Run management commands inside the container
+Example: create superuser:
+
+bash
+Копировать код
+docker compose exec web python manage.py createsuperuser
+🧪 Running tests
+Locally
+From the config directory:
+
+bash
+Копировать код
+cd config
+pytest -v
+In CI (GitHub Actions)
+On each push to the main branch, a GitHub Actions workflow:
+
+starts a PostgreSQL service,
+
+installs dependencies,
+
+applies migrations,
+
+runs pytest -v.
+
+You can see the current status in the Actions tab or via the badge at the top of this README.
+
+📚 API documentation
+The project uses drf-spectacular to generate OpenAPI schema.
+
+Typical setup (may slightly differ depending on your urls):
+
+OpenAPI schema: GET /api/schema/
+
+Swagger UI: /api/schema/swagger-ui/
+
+ReDoc: /api/schema/redoc/
+
+Adjust the paths here according to your urls.py if needed.
+
+✅ Possible improvements
+Some ideas for future work:
+
+add more detailed tests for edge cases (stock edge cases, permissions, etc.)
+
+extend product model (categories, images, descriptions)
+
+add user profile and order history endpoints
+
+integrate rate limiting and throttling
+
+deploy to a public hosting (Render, Railway, etc.)
+
+🙋 About the project
+This project was built as a learning / portfolio backend to practice:
+
+Django REST Framework best practices,
+
+writing tests with pytest and model_bakery,
+
+working with Docker and docker-compose,
+
+setting up CI with GitHub Actions.
+
+Feel free to fork, open issues or suggestions.
 🧑‍💻 Author
 
 Stanislav Simutin
