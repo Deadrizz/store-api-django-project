@@ -4,8 +4,6 @@ import pytest
 from django.contrib.auth import get_user_model
 from model_bakery import baker
 from rest_framework.test import APIClient
-from django.conf import settings
-from win32inetcon import HTTP_QUERY_AUTHORIZATION
 
 
 @pytest.fixture
